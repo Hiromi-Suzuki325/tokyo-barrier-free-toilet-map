@@ -11,13 +11,38 @@ class PinService {
     this.init();
   }
 
+  // ==========================================
   // 定数定義
+  // ==========================================
   static CONSTANTS = {
     SEARCH_RADIUS: 500,
     MAX_RESULTS: 50,
-    DUPLICATE_TOLERANCE: 0.0001
+    DUPLICATE_TOLERANCE: 0.0001,
+    DATA_TYPE_LABELS: {
+      toilets: 'トイレ',
+      stations: '駅',
+      facilities: '施設',
+      barrier_free_toilets: 'バリアフリートイレ',
+      station_barrier_free_toilets: '駅バリアフリートイレ'
+    },
+    DATA_TYPE_COLORS: {
+      toilets: '#00cc00',
+      stations: '#0066cc',
+      facilities: '#ff6600',
+      barrier_free_toilets: '#cc00cc',
+      station_barrier_free_toilets: '#0099cc'
+    },
+    AREA_TYPE_LABELS: {
+      'ward': '区',
+      'city': '市',
+      'town': '町村',
+      'island': '島'
+    }
   };
 
+  // ==========================================
+  // 初期化メソッド
+  // ==========================================
   init() {
     this.setupEventListeners();
     this.setupMapEventListeners();
@@ -35,16 +60,9 @@ class PinService {
     this.map.on('zoomend', () => this.updateFacilityPinsVisibility());
   }
 
-  // すべてのポップアップを閉じる
-  closeAllPopups() {
-    this.pins.forEach(pin => {
-      if (pin.marker.getPopup() && pin.marker.getPopup().isOpen()) {
-        pin.marker.getPopup().remove();
-      }
-    });
-  }
-
-
+  // ==========================================
+  // ピン管理メソッド
+  // ==========================================
   addPin(lng, lat, name = null, color = null, note = null, skipDuplicateCheck = false, pinType = 'personal') {
     const id = ++this.pinCounter;
     const pinName = name || `ピン${id}`;
@@ -115,6 +133,15 @@ class PinService {
     return pin;
   }
 
+  // すべてのポップアップを閉じる
+  closeAllPopups() {
+    this.pins.forEach(pin => {
+      if (pin.marker.getPopup() && pin.marker.getPopup().isOpen()) {
+        pin.marker.getPopup().remove();
+      }
+    });
+  }
+
   clearAllPins() {
     if (this.pins.length === 0) {
       alert('削除するピンがありません。');
@@ -130,6 +157,21 @@ class PinService {
     }
   }
 
+  // 重複ピンをチェック（座標とタイプで判定）
+  isDuplicatePin(lng, lat, name, tolerance = PinService.CONSTANTS.DUPLICATE_TOLERANCE) {
+    return this.pins.some(pin => {
+      const latDiff = Math.abs(pin.lat - lat);
+      const lngDiff = Math.abs(pin.lng - lng);
+      const nameSimilar = pin.name === name;
+      
+      // 座標が非常に近く、名前が同じ場合は重複と判定
+      return latDiff < tolerance && lngDiff < tolerance && nameSimilar;
+    });
+  }
+
+  // ==========================================
+  // データ保存・読み込み関連
+  // ==========================================
   savePinsToLocalStorage() {
     // 個人ピンのみローカルストレージに保存
     const personalPinsData = this.personalPins.map(pin => ({
@@ -156,6 +198,9 @@ class PinService {
     }
   }
 
+  // ==========================================
+  // データ読み込み関連
+  // ==========================================
   async loadNearbyData(dataType) {
     try {
       const center = this.map.getCenter();
@@ -185,106 +230,21 @@ class PinService {
       }
       
       // ピンを追加（施設データピンとして）
-      nearbyData.forEach(item => {
-        const displayName = this.formatPinName(item);
-        const displayNote = this.formatPinNote(item);
-        
-        const pin = this.addPin(
-          item.lng, 
-          item.lat, 
-          displayName, 
-          item.color || this.getDataTypeColor(dataType), 
-          displayNote,
-          false,
-          'facility'
-        );
-        
-        // 表示範囲チェックを実行（デバッグログ付き）
-        if (pin) {
-          const bounds = this.map.getBounds();
-          const isInViewport = this.isPinInViewport(pin, bounds);
-          console.log(`Initial pin ${pin.name} at ${pin.lat}, ${pin.lng}: inViewport=${isInViewport}`);
-          
-          if (!isInViewport) {
-            pin.marker.remove();
-            pin.isVisible = false;
-            console.log(`Initially hiding pin ${pin.name}`);
-          }
-        }
-      });
+      this.addFacilityPinsFromData(nearbyData.map(item => ({
+        ...item,
+        color: item.color || this.getDataTypeColor(dataType)
+      })));
       
       this.showDataLoadedMessage(nearbyData.length, dataType);
       
     } catch (error) {
-      console.error('Error loading nearby data:', error);
-      alert('データの読み込みに失敗しました。');
+      this.handleDataLoadError('近隣データ読み込み', error);
     }
   }
-  
-  getDataTypeLabel(dataType) {
-    const labels = {
-      toilets: 'トイレ',
-      stations: '駅',
-      facilities: '施設',
-      barrier_free_toilets: 'バリアフリートイレ',
-      station_barrier_free_toilets: '駅バリアフリートイレ'
-    };
-    return labels[dataType] || 'データ';
-  }
-  
-  getDataTypeColor(dataType) {
-    const colors = {
-      toilets: '#00cc00',
-      stations: '#0066cc',
-      facilities: '#ff6600',
-      barrier_free_toilets: '#cc00cc',
-      station_barrier_free_toilets: '#0099cc'
-    };
-    return colors[dataType] || CONFIG.MARKER_COLORS.pin;
-  }
-  
-  formatPinName(item) {
-    return item.name || 'Unknown';
-  }
-  
-  formatPinNote(item) {
-    const parts = [];
-    
-    if (item.address) parts.push(`住所: ${item.address}`);
-    if (item.floor) parts.push(`階: ${item.floor}`);
-    if (item.toilet_name) parts.push(`トイレ: ${item.toilet_name}`);
-    
-    // 構造化された備考データを表示
-    if (item.description && item.description.trim()) {
-      parts.push(`<div style="margin-top: 8px;"><strong>説明:</strong><br>${item.description}</div>`);
-    }
-    
-    if (item.equipment && item.equipment.trim()) {
-      parts.push(`<div style="margin-top: 8px;"><strong>設備:</strong><br>${item.equipment}</div>`);
-    }
-    
-    // 従来のnoteフィールドがあり、descriptionとequipmentに分割されていない場合
-    if (item.note && !item.description && !item.equipment) {
-      parts.push(`備考: ${item.note}`);
-    }
-    
-    if (item.distance) parts.push(`<div style="margin-top: 8px; font-weight: bold; color: #0066cc;">距離: ${formatDistance(item.distance)}</div>`);
-    
-    return parts.join('<br>');
-  }
-  
-  // 重複ピンをチェック（座標とタイプで判定）
-  isDuplicatePin(lng, lat, name, tolerance = PinService.CONSTANTS.DUPLICATE_TOLERANCE) {
-    return this.pins.some(pin => {
-      const latDiff = Math.abs(pin.lat - lat);
-      const lngDiff = Math.abs(pin.lng - lng);
-      const nameSimilar = pin.name === name;
-      
-      // 座標が非常に近く、名前が同じ場合は重複と判定
-      return latDiff < tolerance && lngDiff < tolerance && nameSimilar;
-    });
-  }
-  
+
+  // ==========================================
+  // 表示制御関連
+  // ==========================================
   // 施設データピンの表示状態を更新
   updateFacilityPinsVisibility() {
     const bounds = this.map.getBounds();
@@ -317,6 +277,87 @@ class PinService {
            lng <= bounds.getEast();
   }
 
+  // ピンの表示範囲チェックと非表示処理を実行
+  handlePinVisibilityCheck(pin) {
+    if (!pin) return;
+    
+    const bounds = this.map.getBounds();
+    const isInViewport = this.isPinInViewport(pin, bounds);
+    this.logInfo(`ピン表示範囲チェック: ${pin.name} (${pin.lat}, ${pin.lng}) -> 表示範囲内=${isInViewport}`);
+    
+    if (!isInViewport) {
+      pin.marker.remove();
+      pin.isVisible = false;
+      this.logInfo(`ピンを非表示に設定: ${pin.name}`);
+    }
+  }
+
+  // ==========================================
+  // ヘルパーメソッド
+  // ==========================================
+  // ログ出力用ヘルパー
+  logInfo(message, data = null) {
+    const prefix = '[PinService]';
+    if (data) {
+      console.log(`${prefix} ${message}`, data);
+    } else {
+      console.log(`${prefix} ${message}`);
+    }
+  }
+
+  logError(message, error = null) {
+    const prefix = '[PinService ERROR]';
+    if (error) {
+      console.error(`${prefix} ${message}`, error);
+    } else {
+      console.error(`${prefix} ${message}`);
+    }
+  }
+
+  // エラーハンドリング用ヘルパー
+  handleDataLoadError(operation, error) {
+    this.logError(`${operation}でエラーが発生しました`, error);
+    alert(`データの読み込みに失敗しました。\n操作: ${operation}`);
+  }
+
+  getDataTypeLabel(dataType) {
+    return PinService.CONSTANTS.DATA_TYPE_LABELS[dataType] || 'データ';
+  }
+  
+  getDataTypeColor(dataType) {
+    return PinService.CONSTANTS.DATA_TYPE_COLORS[dataType] || CONFIG.MARKER_COLORS.pin;
+  }
+  
+  formatPinName(item) {
+    return item.name || 'Unknown';
+  }
+  
+  formatPinNote(item) {
+    const parts = [];
+    
+    if (item.address) parts.push(`住所: ${item.address}`);
+    if (item.floor) parts.push(`階: ${item.floor}`);
+    if (item.toilet_name) parts.push(`トイレ: ${item.toilet_name}`);
+    
+    // 構造化された備考データを表示
+    if (item.description && item.description.trim()) {
+      parts.push(`<div style="margin-top: 8px;"><strong>説明:</strong><br>${item.description}</div>`);
+    }
+    
+    if (item.equipment && item.equipment.trim()) {
+      parts.push(`<div style="margin-top: 8px;"><strong>設備:</strong><br>${item.equipment}</div>`);
+    }
+    
+    // 従来のnoteフィールドがあり、descriptionとequipmentに分割されていない場合
+    if (item.note && !item.description && !item.equipment) {
+      parts.push(`備考: ${item.note}`);
+    }
+    
+    if (item.distance) parts.push(`<div style="margin-top: 8px; font-weight: bold; color: #0066cc;">距離: ${formatDistance(item.distance)}</div>`);
+    
+    return parts.join('<br>');
+  }
+
   // 全ての近くのデータを統合して読み込み（最適化版）
   async loadAllNearbyData() {
     try {
@@ -324,96 +365,103 @@ class PinService {
       const centerLat = center.lat;
       const centerLng = center.lng;
       
-      console.log('Map center:', centerLat, centerLng);
+      this.logInfo(`地図中心座標: lat=${centerLat}, lng=${centerLng}`);
       
       const areaInfo = estimateAreaFromCoordinates(centerLat, centerLng);
-      const areaTypeText = {
-        'ward': '区',
-        'city': '市', 
-        'town': '町村',
-        'island': '島'
-      };
-      console.log('Estimated area:', areaInfo);
-      
-      let totalLoaded = 0;
-      let totalSkipped = 0;
+      this.logInfo('推定エリア情報', areaInfo);
       
       // 確認ダイアログ
-      if (!confirm(`近くのバリアフリートイレを表示しますか？\n範囲：${PinService.CONSTANTS.SEARCH_RADIUS}m以内\n推定エリア：${areaInfo.area}（${areaTypeText[areaInfo.type] || areaInfo.type}）\n重複するピンは自動的にスキップされます。`)) {
+      if (!this.confirmLoadAllNearbyData(areaInfo)) {
         return;
       }
       
-      try {
-        // 地域別データを優先的に読み込み（軽量版を使用しない）
-        const nearbyData = await loadNearbyData(
-          centerLat, 
-          centerLng, 
-          PinService.CONSTANTS.SEARCH_RADIUS, 
-          PinService.CONSTANTS.MAX_RESULTS,
-          false // 軽量版を使用しない
-        );
-        
-        console.log(`Found ${nearbyData.length} nearby items using regional data`);
-        
-        if (nearbyData.length === 0) {
-          console.log('No data found in regional files, falling back to integrated data');
-          await this.loadIntegratedData(centerLat, centerLng);
-          return;
-        }
-        
-        // ピンを追加（重複チェック付き、施設データピンとして）
-        nearbyData.forEach(item => {
-          const displayName = this.formatPinName(item);
-          
-          // 重複チェック
-          if (!this.isDuplicatePin(item.lng, item.lat, displayName)) {
-            const displayNote = this.formatPinNote(item);
-            
-            const pin = this.addPin(
-              item.lng, 
-              item.lat, 
-              displayName, 
-              item.color || this.getDataTypeColor('barrier_free_toilets'), 
-              displayNote,
-              false,
-              'facility'
-            );
-            
-            // 表示範囲チェックを実行（デバッグログ付き）
-            if (pin) {
-              const bounds = this.map.getBounds();
-              const isInViewport = this.isPinInViewport(pin, bounds);
-              console.log(`Initial pin ${pin.name} at ${pin.lat}, ${pin.lng}: inViewport=${isInViewport}`);
-              
-              if (!isInViewport) {
-                pin.marker.remove();
-                pin.isVisible = false;
-                console.log(`Initially hiding pin ${pin.name}`);
-              }
-            }
-            
-            totalLoaded++;
-          } else {
-            totalSkipped++;
-          }
-        });
-        
-        // 結果をレポート
-        this.showFinalResultMessage(totalLoaded, totalSkipped, areaInfo.area);
-        
-      } catch (areaError) {
-        console.warn('Error loading regional data:', areaError);
-        console.log('Falling back to integrated data');
-        await this.loadIntegratedData(centerLat, centerLng);
-      }
+      await this.loadNearbyDataWithFallback(centerLat, centerLng, areaInfo);
       
     } catch (error) {
-      console.error('Error loading all nearby data:', error);
-      alert('データの読み込みに失敗しました。');
+      this.handleDataLoadError('統合データ読み込み', error);
     }
   }
 
-  // メッセージ表示用のヘルパーメソッド
+  // 統合データ読み込みの確認ダイアログ
+  confirmLoadAllNearbyData(areaInfo) {
+    return confirm(`近くのバリアフリートイレを表示しますか？\n範囲：${PinService.CONSTANTS.SEARCH_RADIUS}m以内\n推定エリア：${areaInfo.area}（${PinService.CONSTANTS.AREA_TYPE_LABELS[areaInfo.type] || areaInfo.type}）\n重複するピンは自動的にスキップされます。`);
+  }
+
+  // 地域データ読み込み（フォールバック付き）
+  async loadNearbyDataWithFallback(centerLat, centerLng, areaInfo) {
+    try {
+      // 地域別データを優先的に読み込み
+      const nearbyData = await loadNearbyData(
+        centerLat, 
+        centerLng, 
+        PinService.CONSTANTS.SEARCH_RADIUS, 
+        PinService.CONSTANTS.MAX_RESULTS,
+        false // 軽量版を使用しない
+      );
+      
+      this.logInfo(`地域データから${nearbyData.length}件の近隣アイテムを発見`);
+      
+      if (nearbyData.length === 0) {
+        this.logInfo('地域ファイルにデータが見つからないため、統合データにフォールバック');
+        await this.loadIntegratedData(centerLat, centerLng);
+        return;
+      }
+      
+      const { totalLoaded, totalSkipped } = this.addFacilityPinsFromData(nearbyData);
+      this.showFinalResultMessage(totalLoaded, totalSkipped, areaInfo.area);
+      
+    } catch (areaError) {
+      this.logError('地域データ読み込みエラー、統合データにフォールバック', areaError);
+      await this.loadIntegratedData(centerLat, centerLng);
+    }
+  }
+
+  // データからピンを追加（重複チェック付き）
+  addFacilityPinsFromData(data) {
+    let totalLoaded = 0;
+    let totalSkipped = 0;
+    
+    data.forEach(item => {
+      const result = this.addSingleFacilityPin(item);
+      if (result.added) {
+        totalLoaded++;
+      } else {
+        totalSkipped++;
+      }
+    });
+    
+    return { totalLoaded, totalSkipped };
+  }
+
+  // 単一の施設ピンを追加（重複チェック付き）
+  addSingleFacilityPin(item, defaultColor = 'barrier_free_toilets') {
+    const displayName = this.formatPinName(item);
+    
+    // 重複チェック
+    if (this.isDuplicatePin(item.lng, item.lat, displayName)) {
+      return { added: false, pin: null };
+    }
+    
+    const displayNote = this.formatPinNote(item);
+    const pin = this.addPin(
+      item.lng, 
+      item.lat, 
+      displayName, 
+      item.color || this.getDataTypeColor(defaultColor), 
+      displayNote,
+      false,
+      'facility'
+    );
+    
+    // 表示範囲チェックを実行
+    this.handlePinVisibilityCheck(pin);
+    
+    return { added: true, pin };
+  }
+
+  // ==========================================
+  // メッセージ表示用メソッド
+  // ==========================================
   confirmDataDisplay(count, dataType) {
     const message = `${count}件の${this.getDataTypeLabel(dataType)}が見つかりました。表示しますか？`;
     return confirm(message);
@@ -440,82 +488,20 @@ class PinService {
   
   // 統合ファイルへのフォールバック機能
   async loadIntegratedData(centerLat, centerLng) {
-    let totalLoaded = 0;
-    let totalSkipped = 0;
-    
     try {
-      console.log('Loading integrated data files...');
+      this.logInfo('統合データファイルを読み込み中...');
       
-      // 統合ファイルを読み込み
-      const [publicResponse, stationResponse] = await Promise.all([
-        fetch('./data/barrier_free_toilets.csv'),
-        fetch('./data/station_barrier_free_toilets.csv')
-      ]);
-      
-      if (!publicResponse.ok && !stationResponse.ok) {
-        throw new Error('Both integrated files are not available');
-      }
-      
-      const allData = [];
-      
-      if (publicResponse.ok) {
-        const publicCsvText = await publicResponse.text();
-        const publicData = parseCSV(publicCsvText);
-        allData.push(...publicData);
-        console.log(`Loaded ${publicData.length} items from public integrated file`);
-      }
-      
-      if (stationResponse.ok) {
-        const stationCsvText = await stationResponse.text();
-        const stationData = parseCSV(stationCsvText);
-        allData.push(...stationData);
-        console.log(`Loaded ${stationData.length} items from station integrated file`);
-      }
-      
-      // 指定半径内のデータを取得
+      const allData = await this.loadIntegratedDataFiles();
       const nearbyData = filterDataByDistance(allData, centerLat, centerLng, PinService.CONSTANTS.SEARCH_RADIUS, PinService.CONSTANTS.MAX_RESULTS);
       
-      console.log(`Found ${nearbyData.length} nearby items from integrated data`);
+      this.logInfo(`統合データから${nearbyData.length}件の近隣アイテムを発見`);
       
       if (nearbyData.length === 0) {
         alert(`現在の表示範囲（${PinService.CONSTANTS.SEARCH_RADIUS}m以内）にはデータがありません。`);
         return;
       }
       
-      // ピンを追加（重複チェック付き、施設データピンとして）
-      nearbyData.forEach(item => {
-        const displayName = this.formatPinName(item);
-        
-        // 重複チェック
-        if (!this.isDuplicatePin(item.lng, item.lat, displayName)) {
-          const displayNote = this.formatPinNote(item);
-          
-          const pin = this.addPin(
-            item.lng, 
-            item.lat, 
-            displayName, 
-            item.color || this.getDataTypeColor('barrier_free_toilets'), 
-            displayNote,
-            false,
-            'facility'
-          );
-          
-          // 表示範囲チェックを実行
-          if (pin) {
-            const bounds = this.map.getBounds();
-            const isInViewport = this.isPinInViewport(pin, bounds);
-            
-            if (!isInViewport) {
-              pin.marker.remove();
-              pin.isVisible = false;
-            }
-          }
-          
-          totalLoaded++;
-        } else {
-          totalSkipped++;
-        }
-      });
+      const { totalLoaded, totalSkipped } = this.addFacilityPinsFromData(nearbyData);
       
       // 結果をレポート（フォールバック使用を明示）
       let message = `${totalLoaded}件のデータを表示しました。`;
@@ -526,9 +512,38 @@ class PinService {
       alert(message);
       
     } catch (error) {
-      console.error('Error loading integrated data:', error);
-      alert('統合データの読み込みにも失敗しました。');
+      this.handleDataLoadError('統合ファイル読み込み', error);
     }
+  }
+
+  // 統合データファイルの読み込み
+  async loadIntegratedDataFiles() {
+    const [publicResponse, stationResponse] = await Promise.all([
+      fetch('./data/barrier_free_toilets.csv'),
+      fetch('./data/station_barrier_free_toilets.csv')
+    ]);
+    
+    if (!publicResponse.ok && !stationResponse.ok) {
+      throw new Error('Both integrated files are not available');
+    }
+    
+    const allData = [];
+    
+    if (publicResponse.ok) {
+      const publicCsvText = await publicResponse.text();
+      const publicData = parseCSV(publicCsvText);
+      allData.push(...publicData);
+      this.logInfo(`公共統合ファイルから${publicData.length}件のアイテムを読み込み`);
+    }
+    
+    if (stationResponse.ok) {
+      const stationCsvText = await stationResponse.text();
+      const stationData = parseCSV(stationCsvText);
+      allData.push(...stationData);
+      this.logInfo(`駅統合ファイルから${stationData.length}件のアイテムを読み込み`);
+    }
+    
+    return allData;
   }
 }
 
