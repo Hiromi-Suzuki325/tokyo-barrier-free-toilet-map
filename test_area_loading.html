@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Area Loading</title>
+    <script type="module">
+        import { loadAreaCSV, estimateAreaFromCoordinates, loadNearbyData } from './utils.js';
+        
+        // Test functions
+        window.testAreaLoading = async function() {
+            console.log('Testing area loading...');
+            
+            // Test 1: Load Chiyoda ward data
+            console.log('\n=== Test 1: Load Chiyoda ward data ===');
+            const chiyodaData = await loadAreaCSV('千代田区', 'ward', 'public');
+            console.log(`Loaded ${chiyodaData.length} items from Chiyoda ward (public)`);
+            
+            const chiyodaStationData = await loadAreaCSV('千代田区', 'ward', 'station');
+            console.log(`Loaded ${chiyodaStationData.length} items from Chiyoda ward (station)`);
+            
+            // Test 2: Load Tachikawa city data
+            console.log('\n=== Test 2: Load Tachikawa city data ===');
+            const tachikawaData = await loadAreaCSV('立川市', 'city', 'public');
+            console.log(`Loaded ${tachikawaData.length} items from Tachikawa city (public)`);
+            
+            const tachikawaStationData = await loadAreaCSV('立川市', 'city', 'station');
+            console.log(`Loaded ${tachikawaStationData.length} items from Tachikawa city (station)`);
+            
+            // Test 3: Test area estimation
+            console.log('\n=== Test 3: Area estimation ===');
+            const tokyoStationArea = estimateAreaFromCoordinates(35.681, 139.767); // Tokyo Station
+            console.log(`Tokyo Station area: ${tokyoStationArea.area} (${tokyoStationArea.type})`);
+            
+            const tachikawaArea = estimateAreaFromCoordinates(35.6939, 139.4075); // Tachikawa
+            console.log(`Tachikawa area: ${tachikawaArea.area} (${tachikawaArea.type})`);
+            
+            // Test 4: Test nearby data loading
+            console.log('\n=== Test 4: Nearby data loading ===');
+            const nearbyData = await loadNearbyData(35.681, 139.767, 500, 10, false); // Tokyo Station area
+            console.log(`Loaded ${nearbyData.length} nearby items`);
+            
+            if (nearbyData.length > 0) {
+                console.log('Sample nearby data:');
+                nearbyData.slice(0, 3).forEach((item, index) => {
+                    console.log(`${index + 1}. ${item.name} - ${item.distance.toFixed(0)}m`);
+                });
+            }
+        };
+        
+        console.log('Test functions loaded. Run testAreaLoading() to test.');
+    </script>
+</head>
+<body>
+    <h1>Area Loading Test</h1>
+    <p>Open the developer console and run <code>testAreaLoading()</code> to test the area loading functionality.</p>
+    <button onclick="testAreaLoading()">Run Test</button>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>MapLibre MVP</title>
+    <link
+      href="https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="map"></div>
+    
+    <!-- 画面右下のコントロールボタン群 -->
+    <div class="bottom-right-controls">
+      <button id="location-btn" class="control-button" title="現在位置を取得">📍</button>
+      <button id="reset-north-btn" class="control-button" title="北を上にリセット">🧭</button>
+    </div>
+    
+    <!-- 画面下端中央のトイレ表示ボタン -->
+    <div class="bottom-center-controls">
+      <button id="load-all-nearby-data" class="toilet-button" title="近くのトイレを表示">トイレを表示</button>
+    </div>
+    
+    <script src="https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
