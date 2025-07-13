@@ -62,3 +62,8 @@ jspm_packages/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Development scripts and utilities (not needed for production)
+scripts/
+utils/
+test_area_loading.html
