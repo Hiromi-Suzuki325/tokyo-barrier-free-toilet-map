@@ -650,7 +650,57 @@ const areaDataCache = new Map();
 const preloadQueue = new Set();
 
 /**
- * 現在位置に基づいて近隣のデータを段階的に読み込み
+ * 統合ファイル優先で近隣データを読み込み（信頼性重視）
+ * @param {number} lat - 緯度
+ * @param {number} lng - 経度
+ * @param {number} radius - 検索半径（メートル）
+ * @param {number} maxCount - 最大取得件数
+ * @returns {Promise<Array>} 近隣データ配列
+ */
+async function loadNearbyDataIntegrated(lat, lng, radius = 1000, maxCount = 50) {
+  console.log('Loading integrated files (reliable approach)...');
+  
+  try {
+    // 統合ファイルを読み込み（確実に存在）
+    const [publicResponse, stationResponse] = await Promise.all([
+      fetch('./data/barrier_free_toilets.csv'),
+      fetch('./data/station_barrier_free_toilets.csv')
+    ]);
+    
+    const allData = [];
+    
+    if (publicResponse.ok) {
+      const publicCsvText = await publicResponse.text();
+      const publicData = parseCSV(publicCsvText);
+      allData.push(...publicData);
+      console.log(`Loaded ${publicData.length} items from integrated public file`);
+    }
+    
+    if (stationResponse.ok) {
+      const stationCsvText = await stationResponse.text();
+      const stationData = parseCSV(stationCsvText);
+      allData.push(...stationData);
+      console.log(`Loaded ${stationData.length} items from integrated station file`);
+    }
+    
+    if (allData.length === 0) {
+      throw new Error('No data loaded from integrated files');
+    }
+    
+    // 距離でフィルタリング
+    const nearbyData = filterDataByDistance(allData, lat, lng, radius, maxCount);
+    console.log(`Found ${nearbyData.length} nearby items from integrated data`);
+    
+    return nearbyData;
+    
+  } catch (error) {
+    console.error('Error loading integrated data:', error);
+    throw error;
+  }
+}
+
+/**
+ * 現在位置に基づいて近隣のデータを段階的に読み込み（後方互換性用）
  * @param {number} lat - 緯度
  * @param {number} lng - 経度
  * @param {number} radius - 検索半径（メートル）
@@ -954,6 +1004,7 @@ export {
   filterDataByDistance,
   formatDistance,
   loadNearbyData,
+  loadNearbyDataIntegrated,
   estimateWardFromCoordinates,
   estimateAreaFromCoordinates,
   loadAreaCSV,

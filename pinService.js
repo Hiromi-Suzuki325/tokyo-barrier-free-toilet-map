@@ -1,5 +1,5 @@
 import CONFIG from './config.js';
-import { parseCSV, filterDataByDistance, formatDistance, loadNearbyData, estimateAreaFromCoordinates } from './utils.js';
+import { parseCSV, filterDataByDistance, formatDistance, loadNearbyData, loadNearbyDataIntegrated, estimateAreaFromCoordinates } from './utils.js';
 
 class PinService {
   constructor(map) {
@@ -387,32 +387,37 @@ class PinService {
     return confirm(`近くのバリアフリートイレを表示しますか？\n範囲：${PinService.CONSTANTS.SEARCH_RADIUS}m以内\n推定エリア：${areaInfo.area}（${PinService.CONSTANTS.AREA_TYPE_LABELS[areaInfo.type] || areaInfo.type}）\n重複するピンは自動的にスキップされます。`);
   }
 
-  // 地域データ読み込み（フォールバック付き）
+  // 統合ファイル優先データ読み込み（信頼性重視）
   async loadNearbyDataWithFallback(centerLat, centerLng, areaInfo) {
     try {
-      // 地域別データを優先的に読み込み
-      const nearbyData = await loadNearbyData(
-        centerLat, 
-        centerLng, 
-        PinService.CONSTANTS.SEARCH_RADIUS, 
-        PinService.CONSTANTS.MAX_RESULTS,
-        false // 軽量版を使用しない
-      );
-      
-      this.logInfo(`地域データから${nearbyData.length}件の近隣アイテムを発見`);
-      
-      if (nearbyData.length === 0) {
-        this.logInfo('地域ファイルにデータが見つからないため、統合データにフォールバック');
-        await this.loadIntegratedData(centerLat, centerLng);
-        return;
-      }
-      
-      const { totalLoaded, totalSkipped } = this.addFacilityPinsFromData(nearbyData);
-      this.showFinalResultMessage(totalLoaded, totalSkipped, areaInfo.area);
-      
-    } catch (areaError) {
-      this.logError('地域データ読み込みエラー、統合データにフォールバック', areaError);
+      // 統合ファイルを最優先で読み込み（確実に存在）
+      this.logInfo('統合ファイル（確実）から読み込み開始...');
       await this.loadIntegratedData(centerLat, centerLng);
+      
+    } catch (error) {
+      this.logError('統合ファイル読み込みエラー', error);
+      // 統合ファイルが失敗した場合のみ地域別ファイルを試行
+      try {
+        this.logInfo('地域別ファイルにフォールバック...');
+        const nearbyData = await loadNearbyData(
+          centerLat, 
+          centerLng, 
+          PinService.CONSTANTS.SEARCH_RADIUS, 
+          PinService.CONSTANTS.MAX_RESULTS,
+          false
+        );
+        
+        if (nearbyData.length > 0) {
+          const { totalLoaded, totalSkipped } = this.addFacilityPinsFromData(nearbyData);
+          this.showFinalResultMessage(totalLoaded, totalSkipped, areaInfo.area);
+        } else {
+          alert(`現在の表示範囲（${PinService.CONSTANTS.SEARCH_RADIUS}m以内）にはデータがありません。`);
+        }
+        
+      } catch (fallbackError) {
+        this.logError('全ての読み込み方法が失敗', fallbackError);
+        alert('データの読み込みに失敗しました。しばらくしてから再試行してください。');
+      }
     }
   }
 
@@ -486,13 +491,18 @@ class PinService {
     alert(message);
   }
   
-  // 統合ファイルへのフォールバック機能
+  // 統合ファイル優先読み込み機能
   async loadIntegratedData(centerLat, centerLng) {
     try {
       this.logInfo('統合データファイルを読み込み中...');
       
-      const allData = await this.loadIntegratedDataFiles();
-      const nearbyData = filterDataByDistance(allData, centerLat, centerLng, PinService.CONSTANTS.SEARCH_RADIUS, PinService.CONSTANTS.MAX_RESULTS);
+      // 新しい統合ファイル専用関数を使用
+      const nearbyData = await loadNearbyDataIntegrated(
+        centerLat, 
+        centerLng, 
+        PinService.CONSTANTS.SEARCH_RADIUS, 
+        PinService.CONSTANTS.MAX_RESULTS
+      );
       
       this.logInfo(`統合データから${nearbyData.length}件の近隣アイテムを発見`);
       
@@ -503,48 +513,20 @@ class PinService {
       
       const { totalLoaded, totalSkipped } = this.addFacilityPinsFromData(nearbyData);
       
-      // 結果をレポート（フォールバック使用を明示）
-      let message = `${totalLoaded}件のデータを表示しました。`;
+      // 結果をレポート（統合ファイル優先使用を明示）
+      let message = `${totalLoaded}件のバリアフリートイレを表示しました。`;
       if (totalSkipped > 0) {
         message += `\n（${totalSkipped}件の重複データをスキップしました）`;
       }
-      message += `\n読み込み元：統合ファイル（フォールバック）`;
+      message += `\n読み込み元：東京都全域統合データ`;
       alert(message);
       
     } catch (error) {
-      this.handleDataLoadError('統合ファイル読み込み', error);
+      this.logError('統合ファイル読み込みエラー', error);
+      throw error; // 上位レベルでのエラーハンドリングのため再スロー
     }
   }
 
-  // 統合データファイルの読み込み
-  async loadIntegratedDataFiles() {
-    const [publicResponse, stationResponse] = await Promise.all([
-      fetch('./data/barrier_free_toilets.csv'),
-      fetch('./data/station_barrier_free_toilets.csv')
-    ]);
-    
-    if (!publicResponse.ok && !stationResponse.ok) {
-      throw new Error('Both integrated files are not available');
-    }
-    
-    const allData = [];
-    
-    if (publicResponse.ok) {
-      const publicCsvText = await publicResponse.text();
-      const publicData = parseCSV(publicCsvText);
-      allData.push(...publicData);
-      this.logInfo(`公共統合ファイルから${publicData.length}件のアイテムを読み込み`);
-    }
-    
-    if (stationResponse.ok) {
-      const stationCsvText = await stationResponse.text();
-      const stationData = parseCSV(stationCsvText);
-      allData.push(...stationData);
-      this.logInfo(`駅統合ファイルから${stationData.length}件のアイテムを読み込み`);
-    }
-    
-    return allData;
-  }
 }
 
 export default PinService;
