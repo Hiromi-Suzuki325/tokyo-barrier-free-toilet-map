@@ -208,7 +208,7 @@ class PinService {
       const centerLng = center.lng;
       
       // CSVファイルを読み込み
-      const response = await fetch(`./data/${dataType}.csv`);
+      const response = await fetch(`/data/${dataType}.csv`);
       if (!response.ok) {
         throw new Error(`Failed to load ${dataType}.csv`);
       }

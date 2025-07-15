@@ -663,8 +663,8 @@ async function loadNearbyDataIntegrated(lat, lng, radius = 1000, maxCount = 50) 
   try {
     // 統合ファイルを読み込み（確実に存在）
     const [publicResponse, stationResponse] = await Promise.all([
-      fetch('./data/barrier_free_toilets.csv'),
-      fetch('./data/station_barrier_free_toilets.csv')
+      fetch('/data/barrier_free_toilets.csv'),
+      fetch('/data/station_barrier_free_toilets.csv')
     ]);
     
     const allData = [];
