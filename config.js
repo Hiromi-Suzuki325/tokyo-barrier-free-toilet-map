@@ -1,11 +1,12 @@
 const CONFIG = {
-  MAPTILER_API_KEY: process.env.MAPTILER_API_KEY || "REDACTED_API_KEY",
+  //MAPTILER_API_KEY: process.env.MAPTILER_API_KEY || "REDACTED_API_KEY",//
+  MAPTILER_API_KEY: import.meta.env.VITE_MAPTILER_API_KEY || "REDACTED_API_KEY",
   TOKYO_STATION_COORDS: [
-    parseFloat(process.env.TOKYO_STATION_LNG) || 139.767,
-    parseFloat(process.env.TOKYO_STATION_LAT) || 35.681
+    parseFloat(import.meta.env.TOKYO_STATION_LNG) || 139.767,
+    parseFloat(import.meta.env.TOKYO_STATION_LAT) || 35.681,
   ],
-  DEFAULT_ZOOM: parseInt(process.env.DEFAULT_ZOOM) || 15,
-  CURRENT_LOCATION_ZOOM: parseInt(process.env.CURRENT_LOCATION_ZOOM) || 15,
+  DEFAULT_ZOOM: parseInt(import.meta.env.DEFAULT_ZOOM) || 15,
+  CURRENT_LOCATION_ZOOM: parseInt(import.meta.env.CURRENT_LOCATION_ZOOM) || 15,
   GEOLOCATION_OPTIONS: {
     enableHighAccuracy: true,
     timeout: 10000,
