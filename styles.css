@@ -171,3 +171,316 @@ body {
   border-color: #999 !important;
   transform: scale(1.1) !important;
 }
+
+/* MapLibre ポップアップのスタイリッシュなデザイン */
+.maplibregl-popup {
+  z-index: 1001 !important;
+}
+
+.maplibregl-popup-content {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(15px) !important;
+  border-radius: 16px !important;
+  padding: 20px 24px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 5px 20px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  min-width: 220px !important;
+  max-width: 320px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  animation: popupFadeIn 0.3s ease-out !important;
+}
+
+@keyframes popupFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ポップアップの矢印部分をより美しく */
+.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* ポップアップ内コンテンツのスタイル */
+.maplibregl-popup-content h3,
+.maplibregl-popup-content .popup-title {
+  margin: 0 0 12px 0 !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: #1a1a1a !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.maplibregl-popup-content p,
+.maplibregl-popup-content div {
+  margin: 0 0 8px 0 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #2d3748 !important;
+}
+
+/* 座標情報などの副次的な情報 */
+.maplibregl-popup-content .popup-coordinates,
+.maplibregl-popup-content .popup-secondary {
+  font-size: 13px !important;
+  color: #718096 !important;
+  margin: 4px 0 !important;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace !important;
+}
+
+/* 距離情報 */
+.maplibregl-popup-content .popup-distance {
+  display: inline-block !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  padding: 4px 8px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  margin: 8px 0 4px 0 !important;
+}
+
+/* 住所などの詳細情報 */
+.maplibregl-popup-content .popup-address,
+.maplibregl-popup-content .popup-details {
+  background: rgba(237, 242, 247, 0.5) !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  margin: 8px 0 !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  border-left: 3px solid #667eea !important;
+}
+
+/* ノート・備考欄 */
+.maplibregl-popup-content .popup-note {
+  background: rgba(255, 248, 220, 0.8) !important;
+  padding: 10px 12px !important;
+  border-radius: 8px !important;
+  margin: 10px 0 !important;
+  font-size: 13px !important;
+  border-left: 3px solid #f6ad55 !important;
+  font-style: italic !important;
+}
+
+/* 削除ボタンのスタイリッシュなデザイン */
+.maplibregl-popup-content button,
+.maplibregl-popup-content .delete-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: white !important;
+  padding: 10px 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  margin: 12px 0 4px 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+}
+
+.maplibregl-popup-content button:hover,
+.maplibregl-popup-content .delete-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
+}
+
+.maplibregl-popup-content button:active,
+.maplibregl-popup-content .delete-button:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+}
+
+/* 削除ボタン専用の警告色バリエーション */
+.maplibregl-popup-content .delete-button.danger,
+.maplibregl-popup-content button[onclick*="delete"],
+.maplibregl-popup-content button[onclick*="削除"] {
+  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;
+  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3) !important;
+}
+
+.maplibregl-popup-content .delete-button.danger:hover,
+.maplibregl-popup-content button[onclick*="delete"]:hover,
+.maplibregl-popup-content button[onclick*="削除"]:hover {
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%) !important;
+  box-shadow: 0 6px 20px rgba(245, 101, 101, 0.4) !important;
+}
+
+/* ポップアップのホバー効果とマイクロインタラクション */
+.maplibregl-popup-content:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.18), 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* 閉じるボタンの改良されたスタイル */
+.maplibregl-popup-close-button {
+  font-size: 18px !important;
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 50% !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  backdrop-filter: blur(10px) !important;
+  color: #4a5568 !important;
+  font-weight: 600 !important;
+  right: 8px !important;
+  top: 8px !important;
+}
+
+.maplibregl-popup-close-button:hover {
+  background: rgba(255, 255, 255, 1) !important;
+  border-color: #667eea !important;
+  transform: scale(1.08) !important;
+  color: #667eea !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2) !important;
+}
+
+/* 滑らかなトランジション効果 */
+.maplibregl-popup-content * {
+  transition: all 0.3s ease !important;
+}
+
+/* フォーカス状態の改善 */
+.maplibregl-popup-content button:focus,
+.maplibregl-popup-close-button:focus {
+  outline: 2px solid #667eea !important;
+  outline-offset: 2px !important;
+}
+
+/* モバイルデバイス対応 - ポップアップスタイル */
+@media (max-width: 768px) {
+  .maplibregl-popup-content {
+    min-width: 200px !important;
+    max-width: 280px !important;
+    padding: 16px 20px !important;
+    font-size: 14px !important;
+  }
+
+  .maplibregl-popup-content h3,
+  .maplibregl-popup-content .popup-title {
+    font-size: 18px !important;
+    margin: 0 0 10px 0 !important;
+  }
+
+  .maplibregl-popup-content p,
+  .maplibregl-popup-content div {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+
+  .maplibregl-popup-content button,
+  .maplibregl-popup-content .delete-button {
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    margin: 10px 0 2px 0 !important;
+  }
+
+  .maplibregl-popup-content .popup-coordinates,
+  .maplibregl-popup-content .popup-secondary {
+    font-size: 12px !important;
+  }
+
+  .maplibregl-popup-content .popup-distance {
+    font-size: 11px !important;
+    padding: 3px 6px !important;
+  }
+
+  .maplibregl-popup-close-button {
+    font-size: 16px !important;
+    width: 26px !important;
+    height: 26px !important;
+    line-height: 26px !important;
+    right: 6px !important;
+    top: 6px !important;
+  }
+}
+
+/* 小さいスマートフォン対応 */
+@media (max-width: 480px) {
+  .maplibregl-popup-content {
+    min-width: 180px !important;
+    max-width: 260px !important;
+    padding: 14px 18px !important;
+  }
+
+  .maplibregl-popup-content h3,
+  .maplibregl-popup-content .popup-title {
+    font-size: 16px !important;
+    margin: 0 0 8px 0 !important;
+  }
+
+  .maplibregl-popup-content p,
+  .maplibregl-popup-content div {
+    font-size: 12px !important;
+  }
+
+  .maplibregl-popup-content button,
+  .maplibregl-popup-content .delete-button {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .maplibregl-popup-content .popup-address,
+  .maplibregl-popup-content .popup-details {
+    padding: 6px 10px !important;
+    margin: 6px 0 !important;
+  }
+
+  .maplibregl-popup-content .popup-note {
+    padding: 8px 10px !important;
+    margin: 8px 0 !important;
+  }
+}
+
+/* タッチデバイス用の改善 */
+@media (hover: none) and (pointer: coarse) {
+  .maplibregl-popup-content:hover {
+    transform: none !important;
+  }
+
+  .maplibregl-popup-content button,
+  .maplibregl-popup-content .delete-button {
+    min-height: 44px !important;
+    padding: 12px 16px !important;
+  }
+
+  .maplibregl-popup-close-button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
