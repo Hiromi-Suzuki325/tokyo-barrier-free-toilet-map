@@ -68,29 +68,53 @@ body {
 }
 
 .toilet-button {
-  background: rgba(45, 101, 175, 0.9);
-  border: 2px solid #2d59b1;
-  border-radius: 25px;
-  padding: 12px 24px;
+  background: linear-gradient(135deg, rgba(45, 101, 175, 0.95), rgba(76, 129, 205, 0.9), rgba(100, 149, 237, 0.85));
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 30px;
+  padding: 16px 32px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
   color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-  min-width: 120px;
-  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 8px 24px rgba(45, 101, 175, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-width: 160px;
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+}
+
+.toilet-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #4c81cd, #6495ed, #87ceeb);
+  border-radius: 32px;
+  z-index: -1;
 }
 
 .toilet-button:hover {
-  background: rgb(76, 129, 175);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(76, 129, 205, 1), rgba(100, 149, 237, 0.95), rgba(135, 170, 255, 0.9));
+  box-shadow: 
+    0 12px 32px rgba(45, 101, 175, 0.5),
+    0 8px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-4px) scale(1.02);
 }
 
 .toilet-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 
+    0 4px 16px rgba(45, 101, 175, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .toilet-button:disabled {
