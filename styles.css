@@ -174,27 +174,11 @@ body {
   }
 }
 
-/* MapLibreポップアップの閉じるボタンのスタイル */
-.maplibregl-popup-close-button {
-  font-size: 20px !important;
-  width: 30px !important;
-  height: 30px !important;
-  line-height: 30px !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-  border-radius: 50% !important;
-  border: 2px solid #ccc !important;
-  cursor: pointer !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transition: all 0.3s ease !important;
-}
-
-.maplibregl-popup-close-button:hover {
-  background: rgba(255, 255, 255, 1) !important;
-  border-color: #999 !important;
-  transform: scale(1.1) !important;
-}
+/*
+  MapLibreポップアップの閉じるボタンのスタイル
+  重複定義を整理：本ファイル後半（「閉じるボタンの改良されたスタイル」）に統合済み。
+  ここでの旧定義は削除し、後半の改良版スタイルのみを使用します。
+*/
 
 /* MapLibre ポップアップのスタイリッシュなデザイン */
 .maplibregl-popup {
