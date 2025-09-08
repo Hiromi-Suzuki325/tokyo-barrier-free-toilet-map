@@ -80,18 +80,24 @@ class PinService {
       .setLngLat([lng, lat])
       .addTo(this.map);
 
+    // 既存のCSSクラス（.popup-*）に合わせてマークアップを構造化し、可読性を高める
+    // 日本語説明: タイトル・座標・詳細/備考をそれぞれ専用クラスで表示する
+    const noteSection = pinNote
+      ? (pinType === 'facility' ? `${pinNote}` : `<div class="popup-note">${pinNote}</div>`)
+      : '';
+    const popupHTML = `
+      <div>
+        <div class="popup-title">${pinName}</div>
+        <div class="popup-coordinates">緯度: ${lat.toFixed(6)} / 経度: ${lng.toFixed(6)}</div>
+        ${noteSection}
+      </div>
+    `;
+
     const popup = new maplibregl.Popup({
       offset: CONFIG.POPUP_OFFSET,
       closeButton: true,
       closeOnClick: false
-    }).setHTML(`
-      <div style="padding: 10px;">
-        <strong>${pinName}</strong><br>
-        緯度: ${lat.toFixed(6)}<br>
-        経度: ${lng.toFixed(6)}<br>
-        ${pinNote ? `<div style="margin: 5px 0; padding: 5px; background: #f8f9fa; border-radius: 3px; font-size: 12px; line-height: 1.4;">${pinNote}</div>` : ''}
-      </div>
-    `);
+    }).setHTML(popupHTML);
 
     marker.setPopup(popup);
 
@@ -333,29 +339,38 @@ class PinService {
   }
   
   formatPinNote(item) {
+    // 施設データの表示用HTMLを既存CSSクラスに合わせて生成
+    // 見やすさ向上のため、各項目を分離し、クラスベースの装飾に切り替える
     const parts = [];
-    
-    if (item.address) parts.push(`住所: ${item.address}`);
-    if (item.floor) parts.push(`階: ${item.floor}`);
-    if (item.toilet_name) parts.push(`トイレ: ${item.toilet_name}`);
-    
-    // 構造化された備考データを表示
+
+    // 距離（バッジ風表示）
+    if (item.distance) {
+      parts.push(`<span class="popup-distance">距離: ${formatDistance(item.distance)}</span>`);
+    }
+
+    // 住所などの基本情報
+    const basics = [];
+    if (item.address) basics.push(`住所: ${item.address}`);
+    if (item.floor) basics.push(`階: ${item.floor}`);
+    if (item.toilet_name) basics.push(`トイレ: ${item.toilet_name}`);
+    if (basics.length > 0) {
+      parts.push(`<div class="popup-address">${basics.join('<br>')}</div>`);
+    }
+
+    // 説明・設備（詳細情報）
     if (item.description && item.description.trim()) {
-      parts.push(`<div style="margin-top: 8px;"><strong>説明:</strong><br>${item.description}</div>`);
+      parts.push(`<div class="popup-details"><strong>説明:</strong><br>${item.description}</div>`);
     }
-    
     if (item.equipment && item.equipment.trim()) {
-      parts.push(`<div style="margin-top: 8px;"><strong>設備:</strong><br>${item.equipment}</div>`);
+      parts.push(`<div class="popup-details"><strong>設備:</strong><br>${item.equipment}</div>`);
     }
-    
-    // 従来のnoteフィールドがあり、descriptionとequipmentに分割されていない場合
+
+    // 旧noteのみが存在するケース（後方互換）
     if (item.note && !item.description && !item.equipment) {
-      parts.push(`備考: ${item.note}`);
+      parts.push(`<div class="popup-note">備考: ${item.note}</div>`);
     }
-    
-    if (item.distance) parts.push(`<div style="margin-top: 8px; font-weight: bold; color: #0066cc;">距離: ${formatDistance(item.distance)}</div>`);
-    
-    return parts.join('<br>');
+
+    return parts.join('');
   }
 
   // 全ての近くのデータを統合して読み込み（最適化版）
@@ -384,7 +399,9 @@ class PinService {
 
   // 統合データ読み込みの確認ダイアログ
   confirmLoadAllNearbyData(areaInfo) {
-    return confirm(`近くのバリアフリートイレを表示しますか？\n範囲：${PinService.CONSTANTS.SEARCH_RADIUS}m以内\n推定エリア：${areaInfo.area}（${PinService.CONSTANTS.AREA_TYPE_LABELS[areaInfo.type] || areaInfo.type}）\n重複するピンは自動的にスキップされます。`);
+    // 仕様変更: ダイアログを表示せず常に実行する
+    // 日本語説明: トイレ表示ボタン押下時の確認ダイアログは廃止
+    return true;
   }
 
   // 統合ファイル優先データ読み込み（信頼性重視）
@@ -481,14 +498,13 @@ class PinService {
   }
 
   showFinalResultMessage(totalLoaded, totalSkipped, estimatedWard = null) {
-    let message = `${totalLoaded}件のデータを表示しました。`;
-    if (totalSkipped > 0) {
-      message += `\n（${totalSkipped}件の重複データをスキップしました）`;
-    }
-    if (estimatedWard) {
-      message += `\n読み込み元：${estimatedWard}エリア`;
-    }
-    alert(message);
+    // 仕様変更: 結果のアラートは廃止。開発者向けにログのみ出力。
+    // 日本語説明: モーダルダイアログはUX低下のため排除し、静かな動作とする
+    const parts = [];
+    parts.push(`${totalLoaded}件のデータを表示`);
+    if (totalSkipped > 0) parts.push(`重複スキップ: ${totalSkipped}`);
+    if (estimatedWard) parts.push(`読み込み元: ${estimatedWard}`);
+    console.log('[PinService] 結果:', parts.join(' / '));
   }
   
   // 統合ファイル優先読み込み機能

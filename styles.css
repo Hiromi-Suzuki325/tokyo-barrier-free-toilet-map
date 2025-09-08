@@ -190,6 +190,8 @@ body {
   backdrop-filter: blur(15px) !important;
   border-radius: 16px !important;
   padding: 20px 24px !important;
+  /* 下部に×ボタン分の余白を確保し、本文と重ならないようにする */
+  padding-bottom: 80px !important; /* 提案2: 下部配置の閉じるボタン用スペースを確保 */
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 5px 20px rgba(0, 0, 0, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.6) !important;
   min-width: 220px !important;
@@ -349,12 +351,15 @@ body {
 
 /* 閉じるボタンの改良されたスタイル */
 .maplibregl-popup-close-button {
+  /* 提案2: ×ボタンをポップアップ下部の横長ボタンとして配置 */
   font-size: 18px !important;
-  width: 28px !important;
-  height: 28px !important;
-  line-height: 28px !important;
+  width: auto !important;          /* 横幅は左右オフセットで自動算出 */
+  height: 44px !important;         /* タップ領域を十分確保 */
+  line-height: 44px !important;    /* テキストの縦中央寄せ（display:flexと併用） */
+  box-sizing: border-box !important; /* 枠線込みで幅を計算し、はみ出しを防止 */
+  max-width: calc(100% - 24px) !important; /* 左右オフセット合計(12px*2)分だけ内側に収める */
   background: rgba(255, 255, 255, 0.9) !important;
-  border-radius: 50% !important;
+  border-radius: 10px !important;  /* ボタンらしい角丸 */
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
   cursor: pointer !important;
   display: flex !important;
@@ -364,8 +369,10 @@ body {
   backdrop-filter: blur(10px) !important;
   color: #4a5568 !important;
   font-weight: 600 !important;
-  right: 8px !important;
-  top: 8px !important;
+  top: auto !important;            /* 上側配置を無効化 */
+  right: 12px !important;          /* 右側オフセットをやや広げ、はみ出しを軽減 */
+  bottom: 10px !important;         /* 下側オフセット */
+  left: 12px !important;           /* 左側オフセットをやや広げ、はみ出しを軽減 */
 }
 
 .maplibregl-popup-close-button:hover {
@@ -394,6 +401,8 @@ body {
     min-width: 200px !important;
     max-width: 280px !important;
     padding: 16px 20px !important;
+    /* 下部の閉じるボタンと本文が重ならないよう余白を確保 */
+    padding-bottom: 80px !important;
     font-size: 14px !important;
   }
 
@@ -427,12 +436,15 @@ body {
   }
 
   .maplibregl-popup-close-button {
+    /* モバイルでも下部配置を維持し、十分なタップ領域を確保 */
     font-size: 16px !important;
-    width: 26px !important;
-    height: 26px !important;
-    line-height: 26px !important;
-    right: 6px !important;
-    top: 6px !important;
+    top: auto !important;
+    bottom: 8px !important;
+    left: 12px !important;  /* 右はみ出し対策：左右に十分な余白を確保 */
+    right: 12px !important; /* 右はみ出し対策：左右に十分な余白を確保 */
+    height: 44px !important;
+    line-height: 44px !important;
+    width: auto !important;
   }
 }
 
@@ -442,6 +454,8 @@ body {
     min-width: 180px !important;
     max-width: 260px !important;
     padding: 14px 18px !important;
+    /* 小画面ではより広い下余白を確保 */
+    padding-bottom: 80px !important;
   }
 
   .maplibregl-popup-content h3,
@@ -477,6 +491,10 @@ body {
 
 /* タッチデバイス用の改善 */
 @media (hover: none) and (pointer: coarse) {
+  /* タッチ端末では下部の閉じるボタン領域を広めに確保 */
+  .maplibregl-popup-content {
+    padding-bottom: 88px !important;
+  }
   .maplibregl-popup-content:hover {
     transform: none !important;
   }
@@ -490,5 +508,13 @@ body {
   .maplibregl-popup-close-button {
     min-width: 44px !important;
     min-height: 44px !important;
+  }
+}
+
+/* デスクトップ（769px以上）では高さを少し低めに調整 */
+@media (min-width: 769px) {
+  .maplibregl-popup-close-button {
+    height: 36px !important;
+    line-height: 36px !important;
   }
 }
