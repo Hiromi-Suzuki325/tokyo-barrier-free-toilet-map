@@ -9,6 +9,93 @@ body {
   width: 100%;
 }
 
+/* ==========================
+   ボトムシート（モバイル用）
+   日本語説明: ピン詳細を画面下から50%ほどの高さで表示
+   ========================== */
+/* 日本語説明: 背景の半透明レイヤー。クリックで閉じる */
+#bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  /* 日本語説明: 背景の暗幕を廃止（常に透明にする） */
+  background: transparent;
+  z-index: 1100; /* MapLibreポップアップ(1001)より前面 */
+  /* 日本語説明: 地図操作を可能にするため、イベントを透過させる */
+  pointer-events: none;
+}
+
+/* 日本語説明: ボトムシート本体 */
+#bottom-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1101; /* バックドロップのさらに前面 */
+  background: #fff;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+  /* 日本語説明: 高さは50%程度（dvh優先、vhフォールバック） */
+  height: 50vh;    /* フォールバック */
+  height: 50dvh;   /* 動的ビューポートに追従 */
+}
+
+/* 日本語説明: 開状態（下からスライドイン） */
+#bottom-sheet[data-open="true"] {
+  transform: translateY(0);
+}
+
+/* 日本語説明: ヘッダー（タイトル＋閉じるボタン） */
+.bs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  padding-top: calc(12px + env(safe-area-inset-top));
+}
+.bs-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.bs-header #bs-close {
+  appearance: none;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #f9f9f9;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  line-height: 36px;
+  text-align: center;
+}
+
+/* 日本語説明: コンテンツ部分（縦スクロール可能） */
+.bs-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+/* 日本語説明: シート表示中は背面のスクロールをロック */
+body.bs-lock {
+  overflow: hidden;
+}
+
+/* 日本語説明: デスクトップでは常時非表示（コード側でもモバイルのみ開く） */
+@media (min-width: 769px) {
+  #bottom-sheet,
+  #bottom-sheet-backdrop {
+    display: none !important;
+  }
+}
+
 /* 画面右下のコントロールボタン群 */
 .bottom-right-controls {
   position: absolute;

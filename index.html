@@ -16,6 +16,21 @@
   <body>
     <div id="map"></div>
 
+    <!-- 日本語説明: ボトムシート用のバックドロップ（外側クリックで閉じる） -->
+    <div id="bottom-sheet-backdrop" hidden></div>
+
+    <!-- 日本語説明: モバイル向けのボトムシート本体。ピンクリックで詳細を表示する -->
+    <div id="bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="bs-title" hidden>
+      <div class="bs-header">
+        <!-- 日本語説明: 詳細タイトル（ピン名を設定） -->
+        <h2 id="bs-title">詳細</h2>
+        <!-- 日本語説明: 閉じるボタン（フォーカス初期位置） -->
+        <button id="bs-close" aria-label="閉じる">×</button>
+      </div>
+      <!-- 日本語説明: 内容領域（縦スクロール可能）。既存のpopupHTMLを注入 -->
+      <div class="bs-body" id="bs-body"></div>
+    </div>
+
     <!-- 画面右下のコントロールボタン群 -->
     <div class="bottom-right-controls">
       <button id="location-btn" class="control-button" title="現在位置を取得">

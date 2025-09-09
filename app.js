@@ -1,6 +1,8 @@
 import CONFIG from './config.js';
 import LocationService from './locationService.js';
 import PinService from './pinService.js';
+// 日本語説明: ボトムシートの開閉・判定ユーティリティを取り込む
+import { closeBottomSheet, isMobile, bindBottomSheetEvents } from './bottomSheet.js';
 
 class MapApp {
   constructor() {
@@ -34,6 +36,8 @@ class MapApp {
     // 即座にボタンを初期化（DOMContentLoadedの後なので要素は存在する）
     this.initResetNorthButton();
     this.initMapClickHandler();
+    // 日本語説明: ボトムシートの基本イベントを一度だけバインド
+    bindBottomSheetEvents();
   }
   
   initResetNorthButton() {
@@ -55,6 +59,10 @@ class MapApp {
     this.map.on('click', (e) => {
       // ピンがクリックされた場合はイベントがstopPropagationされるため、ここには到達しない
       this.pinService.closeAllPopups();
+      // 日本語説明: モバイル時はボトムシートも閉じる
+      if (isMobile()) {
+        closeBottomSheet();
+      }
     });
   }
 }
